@@ -162,6 +162,21 @@ tab_dados, tab_geo, tab_infra, tab_mat = st.tabs(
 # Aba dados
 with tab_dados:
     st.subheader("Tabela de Escolas")
+    # Card: % escolas sem psicologos e sem assistentes sociais
+    total_escolas = len(dff)
+    if total_escolas > 0:
+        sem_psi = int((dff["QT_PROF_PSICOLOGO"] == 0).sum())
+        sem_as = int((dff["QT_PROF_ASSIST_SOCIAL"] == 0).sum())
+        pct_sem_psi = sem_psi / total_escolas * 100
+        pct_sem_as = sem_as / total_escolas * 100
+    else:
+        sem_psi = sem_as = 0
+        pct_sem_psi = pct_sem_as = 0.0
+
+    cp1, cp2 = st.columns(2)
+    cp1.metric("Escolas sem Psicologos", f"{fmt_dec(pct_sem_psi, 2)}%", help=f"{fmt_int(sem_psi)} de {fmt_int(total_escolas)} escolas")
+    cp2.metric("Escolas sem Assist. Sociais", f"{fmt_dec(pct_sem_as, 2)}%", help=f"{fmt_int(sem_as)} de {fmt_int(total_escolas)} escolas")
+
 
     busca = st.text_input("Buscar escola por nome", placeholder="Digite o nome da escola...")
 
@@ -191,6 +206,14 @@ with tab_dados:
     mat_num = pd.to_numeric(df_table["Matriculas"], errors="coerce").fillna(0).astype(float)
     doc_num = pd.to_numeric(df_table["Docentes"], errors="coerce").fillna(0).astype(float)
     df_table["Mat./Docente"] = (mat_num / doc_num.replace(0.0, float("nan"))).round(2)
+    #psicologos por 100 alunos
+    psi_num = pd.to_numeric(df_table["Psicologos"], errors="coerce").fillna(0).astype(float)
+    df_table["Psic./100 alunos"] = (psi_num / mat_num.replace(0.0, float("nan")) * 100).round(4)
+
+    #Assistentes Sociais por 100 alunos
+    ass_num = pd.to_numeric(df_table["Assist. Sociais"], errors="coerce").fillna(0).astype(float)
+    df_table["AS/100 alunos"] = (ass_num / mat_num.replace(0.0, float("nan")) * 100).round(4)
+
 
     if busca:
         df_table = df_table[df_table["Escola"].str.contains(busca, case=False, na=False)]
