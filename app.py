@@ -51,7 +51,39 @@ st.caption("Explore os dados do Censo Escolar com filtros interativos")
 
 df = load_merged()
 
+# Card autor
+st.sidebar.markdown(
+    """
+    <div style="
+        background: linear-gradient(135deg, rgba(99, 110, 250, 0.1), rgba(239, 85, 59, 0.1));
+        border: 1px solid rgba(99, 110, 250, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    ">
+        <p style="
+            margin: 0;
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        ">Elaborado por</p>
+        <a href="https://www.linkedin.com/in/christianbasilioo/" target="_blank" style="
+            font-size: 18px;
+            font-weight: 600;
+            color: #636EFA;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        ">Christian Basilio</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 # Filtros
+
 st.sidebar.header("Filtros")
 
 # Regiao
