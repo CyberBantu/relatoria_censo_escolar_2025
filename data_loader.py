@@ -32,7 +32,7 @@ def load_escola():
         "CO_ENTIDADE", "NO_REGIAO", "NO_UF", "SG_UF",
         "NO_MUNICIPIO", "NO_ENTIDADE",
         "TP_DEPENDENCIA", "TP_LOCALIZACAO",
-        "NO_BAIRRO", "LATITUDE", "LONGITUDE",
+        "NO_BAIRRO",
         "IN_AGUA_POTAVEL", "IN_AGUA_REDE_PUBLICA", "IN_AGUA_INEXISTENTE",
         "IN_ESGOTO_REDE_PUBLICA", "IN_ESGOTO_FOSSA_SEPTICA", "IN_ESGOTO_INEXISTENTE",
         "IN_ENERGIA_REDE_PUBLICA", "IN_ENERGIA_INEXISTENTE",
@@ -56,6 +56,9 @@ def load_escola():
 
     df["Dependencia"] = df["TP_DEPENDENCIA"].map(DEPENDENCIA_MAP)
     df["Localizacao"] = df["TP_LOCALIZACAO"].map(LOCALIZACAO_MAP)
+
+    coords = pd.read_parquet(DATA_DIR / "coordenadas_escolas.parquet")
+    df = df.merge(coords, on="CO_ENTIDADE", how="left")
 
     return df
 

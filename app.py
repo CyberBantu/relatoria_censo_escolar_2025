@@ -120,7 +120,7 @@ else:
     ufs_disp = sorted(df["SG_UF"].dropna().unique())
 sel_ufs = st.sidebar.multiselect("Estado (UF)", ufs_disp)
 
-# Municipio 
+# Municipio
 if sel_ufs:
     mun_disp = sorted(df.loc[df["SG_UF"].isin(sel_ufs), "NO_MUNICIPIO"].dropna().unique())
     sel_mun = st.sidebar.multiselect("Municipio", mun_disp)
@@ -137,7 +137,7 @@ sel_locs = st.sidebar.multiselect("Localizacao", locs_disp)
 
 # Infraestrutura
 st.sidebar.subheader("Infraestrutura")
-INFRA_FILTERS = { # estrutura de filtros
+INFRA_FILTERS = {
     "Com Internet": ("IN_INTERNET", 1),
     "Sem Internet": ("IN_INTERNET", 0),
     "Com Biblioteca": ("IN_BIBLIOTECA", 1),
@@ -209,12 +209,12 @@ c6.metric("Mat./Docente", fmt_dec(mat_por_doc, 2))
 
 st.divider()
 
-# Abaas
-tab_dados, tab_geo, tab_infra, tab_mat = st.tabs(
-    ["Dados", "Analise Geografica", "Infraestrutura", "Matriculas"]
+# Abas
+tab_dados, tab_infra, tab_mat, tab_geo = st.tabs(
+    ["Dados", "Infraestrutura", "Matriculas", "Analise Geografica"]
 )
 
-# Aba dados
+# ── Aba dados
 with tab_dados:
     st.subheader("Tabela de Escolas")
     # Card: % escolas sem psicologos e sem assistentes sociais
@@ -231,7 +231,6 @@ with tab_dados:
     cp1, cp2 = st.columns(2)
     cp1.metric("Escolas sem Psicologos", f"{fmt_dec(pct_sem_psi, 2)}%", help=f"{fmt_int(sem_psi)} de {fmt_int(total_escolas)} escolas")
     cp2.metric("Escolas sem Assist. Sociais", f"{fmt_dec(pct_sem_as, 2)}%", help=f"{fmt_int(sem_as)} de {fmt_int(total_escolas)} escolas")
-
 
     busca = st.text_input("Buscar escola por nome", placeholder="Digite o nome da escola...")
 
@@ -257,18 +256,18 @@ with tab_dados:
 
     df_table = dff[list(display_cols.keys())].rename(columns=display_cols).copy()
 
-    #Matriculas por Docente
+    # Matriculas por Docente
     mat_num = pd.to_numeric(df_table["Matriculas"], errors="coerce").fillna(0).astype(float)
     doc_num = pd.to_numeric(df_table["Docentes"], errors="coerce").fillna(0).astype(float)
     df_table["Mat./Docente"] = (mat_num / doc_num.replace(0.0, float("nan"))).round(2)
-    #psicologos por 100 alunos
+
+    # Psicologos por 100 alunos
     psi_num = pd.to_numeric(df_table["Psicologos"], errors="coerce").fillna(0).astype(float)
     df_table["Psic./100 alunos"] = (psi_num / mat_num.replace(0.0, float("nan")) * 100).round(4)
 
-    #Assistentes Sociais por 100 alunos
+    # Assistentes Sociais por 100 alunos
     ass_num = pd.to_numeric(df_table["Assist. Sociais"], errors="coerce").fillna(0).astype(float)
     df_table["AS/100 alunos"] = (ass_num / mat_num.replace(0.0, float("nan")) * 100).round(4)
-
 
     if busca:
         df_table = df_table[df_table["Escola"].str.contains(busca, case=False, na=False)]
@@ -285,7 +284,7 @@ with tab_dados:
 
     st.caption(f"Exibindo {fmt_int(len(df_table))} escolas")
 
-    # Download -- em dev
+    # Download
     csv = dff.to_csv(index=False, sep=";", encoding="utf-8-sig")
     st.download_button(
         "Baixar dados filtrados (CSV)",
@@ -332,65 +331,6 @@ with tab_dados:
         fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
         fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Matriculas por Docente", height=400)
         st.plotly_chart(fig, use_container_width=True)
-
-# ── Aba geografica
-with tab_geo:
-    col_g1, col_g2 = st.columns(2)
-
-    with col_g1:
-        st.subheader("Escolas por Estado")
-        uf_data = dff.groupby("SG_UF").agg(
-            Escolas=("CO_ENTIDADE", "size"),
-            Matriculas=("QT_MAT_BAS", "sum"),
-        ).reset_index().sort_values("Escolas", ascending=True)
-
-        fig = px.bar(uf_data, x="Escolas", y="SG_UF", orientation="h",
-                     text="Escolas", color_discrete_sequence=["#636EFA"])
-        fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-        fig.update_layout(yaxis_title="", height=600, margin=dict(t=10, b=0))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col_g2:
-        st.subheader("Matriculas por Estado")
-        uf_data2 = uf_data.sort_values("Matriculas", ascending=True)
-        fig = px.bar(uf_data2, x="Matriculas", y="SG_UF", orientation="h",
-                     text="Matriculas", color_discrete_sequence=["#EF553B"])
-        fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-        fig.update_layout(yaxis_title="", height=600, margin=dict(t=10, b=0))
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Escolas por regiao + dependencia
-    st.subheader("Escolas por Regiao e Dependencia")
-    reg_dep = dff.groupby(["NO_REGIAO", "Dependencia"]).size().reset_index(name="Qtd")
-    fig = px.bar(
-        reg_dep, x="NO_REGIAO", y="Qtd", color="Dependencia",
-        text="Qtd",
-        color_discrete_map=DEPENDENCIA_COLORS,
-        barmode="group",
-    )
-    fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-    fig.update_layout(xaxis_title="Regiao", yaxis_title="Quantidade", height=400)
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Mapa
-    st.subheader("Mapa")
-    df_map = dff.dropna(subset=["LATITUDE", "LONGITUDE"]).copy()
-    map_limit = 10_000
-    if len(df_map) > map_limit:
-        df_map = df_map.sample(map_limit, random_state=42)
-
-    if len(df_map) > 0:
-        fig = px.scatter_map(
-            df_map, lat="LATITUDE", lon="LONGITUDE",
-            color="Dependencia", color_discrete_map=DEPENDENCIA_COLORS,
-            hover_name="NO_ENTIDADE",
-            hover_data={"NO_MUNICIPIO": True, "SG_UF": True, "LATITUDE": False, "LONGITUDE": False},
-            zoom=3, center={"lat": -14.2, "lon": -51.9}, height=500,
-        )
-        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("Nenhuma escola com coordenadas para os filtros selecionados.")
 
 # ── Aba infraestrutura
 with tab_infra:
@@ -467,7 +407,7 @@ with tab_infra:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-# ── Aba matriculass
+# ── Aba matriculas
 with tab_mat:
     st.subheader("Distribuicao de Matriculas")
 
@@ -534,3 +474,85 @@ with tab_mat:
     fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
     fig.update_layout(yaxis_title="", height=550, margin=dict(t=10, b=0))
     st.plotly_chart(fig, use_container_width=True)
+
+# ── Aba analise geografica
+with tab_geo:
+    col_g1, col_g2 = st.columns(2)
+    with col_g1:
+        st.subheader("Escolas por Estado")
+        uf_data = dff.groupby("SG_UF").agg(
+            Escolas=("CO_ENTIDADE", "size"),
+            Matriculas=("QT_MAT_BAS", "sum"),
+        ).reset_index().sort_values("Escolas", ascending=True)
+        fig = px.bar(uf_data, x="Escolas", y="SG_UF", orientation="h",
+                     text="Escolas", color_discrete_sequence=["#636EFA"])
+        fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+        fig.update_layout(yaxis_title="", height=600, margin=dict(t=10, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+    with col_g2:
+        st.subheader("Matriculas por Estado")
+        uf_data2 = uf_data.sort_values("Matriculas", ascending=True)
+        fig = px.bar(uf_data2, x="Matriculas", y="SG_UF", orientation="h",
+                     text="Matriculas", color_discrete_sequence=["#EF553B"])
+        fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+        fig.update_layout(yaxis_title="", height=600, margin=dict(t=10, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+    # Escolas por regiao + dependencia
+    st.subheader("Escolas por Regiao e Dependencia")
+    reg_dep = dff.groupby(["NO_REGIAO", "Dependencia"]).size().reset_index(name="Qtd")
+    fig = px.bar(
+        reg_dep, x="NO_REGIAO", y="Qtd", color="Dependencia",
+        text="Qtd",
+        color_discrete_map=DEPENDENCIA_COLORS,
+        barmode="group",
+    )
+    fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+    fig.update_layout(xaxis_title="Regiao", yaxis_title="Quantidade", height=400)
+    st.plotly_chart(fig, use_container_width=True)
+    # Mapa
+    st.subheader("Mapa")
+    df_map = dff.dropna(subset=["LATITUDE", "LONGITUDE"]).copy()
+    map_limit = 10_000
+    if len(df_map) > map_limit:
+        df_map = df_map.sample(map_limit, random_state=42)
+    if len(df_map) > 0:
+        import math
+        lat_min, lat_max = df_map["LATITUDE"].min(), df_map["LATITUDE"].max()
+        lon_min, lon_max = df_map["LONGITUDE"].min(), df_map["LONGITUDE"].max()
+        center_lat = (lat_min + lat_max) / 2
+        center_lon = (lon_min + lon_max) / 2
+        lat_range = lat_max - lat_min
+        lon_range = lon_max - lon_min
+        max_range = max(lat_range, lon_range, 0.01)
+        zoom = max(1, math.floor(8.5 - math.log2(max_range + 0.01)))
+
+        fig = px.scatter_map(
+            df_map, lat="LATITUDE", lon="LONGITUDE",
+            color="Dependencia", color_discrete_map=DEPENDENCIA_COLORS,
+            hover_name="NO_ENTIDADE",
+            hover_data={
+                "Dependencia": True,
+                "NO_MUNICIPIO": True,
+                "SG_UF": True,
+                "Localizacao": True,
+                "QT_MAT_BAS": True,
+                "QT_DOC_BAS": True,
+                "QT_PROF_PSICOLOGO": True,
+                "QT_PROF_ASSIST_SOCIAL": True,
+                "LATITUDE": False,
+                "LONGITUDE": False,
+            },
+            labels={
+                "NO_MUNICIPIO": "Municipio",
+                "SG_UF": "UF",
+                "QT_MAT_BAS": "Matriculas",
+                "QT_DOC_BAS": "Docentes",
+                "QT_PROF_PSICOLOGO": "Psicologos",
+                "QT_PROF_ASSIST_SOCIAL": "Assist. Sociais",
+            },
+            zoom=zoom, center={"lat": center_lat, "lon": center_lon}, height=500,
+        )
+        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("Nenhuma escola com coordenadas para os filtros selecionados.")
