@@ -47,8 +47,31 @@ st.markdown(
 )
 
 st.title("Relatorio - Censo Escolar 2025")
-st.caption("Explore os dados do Censo Escolar com filtros interativos")
-
+st.markdown(
+    """
+    <div style="
+        background: linear-gradient(to right, rgba(99, 110, 250, 0.05), rgba(239, 85, 59, 0.05));
+        border-left: 4px solid #636EFA;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+    ">
+        <p style="
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+        ">
+            📊 <strong>Explore os dados do Censo Escolar com filtros interativos</strong><br>
+            <span style="font-size: 13px; color: #777;">
+                Os dados são provenientes do INEP e foram processados para esta aplicação, as regras para escolas analisas podem ser encontradas no Site do INEP.<br>
+                Selecione os filtros desejados para analisar as escolas brasileiras.
+            </span>
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 df = load_merged()
 
 # Card autor
